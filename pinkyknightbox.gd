@@ -3,7 +3,7 @@ extends Node2D
 var speed = 300
 var direction = Vector2(1,0)
 var screen_size= Vector2()
-var window_size= Vector2(200, 200)
+var window_size= Vector2(400, 400)
 var idle_timer=0.0
 var is_idling = false
 var is_dragging = false
@@ -11,10 +11,22 @@ var drag_offset = Vector2()
 
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var area = $Area2D
+@onready var label = $Label
+@onready var sprite_2d = $Label/Sprite2D
 
 func _ready():
 	screen_size = Vector2(DisplayServer.screen_get_size())
 	animated_sprite.play("walk right")
+	area.input_event.connect(_on_area_input)
+	area.input_event.connect(_on_menu_input)
+	$AnimatedSprite2D/PopupMenu.add_item("Need help?", 0)
+	$AnimatedSprite2D/PopupMenu.id_pressed.connect(_on_menu_pressed)
+
+func _on_menu_input(_viewport, event, _shape_idx):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+		if event.pressed:
+			$AnimatedSprite2D/PopupMenu.popup_on_parent(Rect2i(Vector2i(event.position), Vector2i.ZERO))
+			$AnimatedSprite2D/PopupMenu.id_pressed.connect(_on_menu_pressed)
 
 func _on_area_input(_viewport, event, _shape_idx):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -26,6 +38,13 @@ func _on_area_input(_viewport, event, _shape_idx):
 		else:
 			is_dragging = false
 
+func _on_menu_pressed(id):
+	if id == 0:
+		print("They get more upset the more you do not interact with them. They will be VERY mad if you don't")
+		$Label.visible = true
+		await get_tree().create_timer(10.0).timeout
+		$Label.visible = false
+
 func maybe_idle():
 	if randf() < 0.3:
 		is_idling=true
@@ -36,6 +55,12 @@ func maybe_idle():
 			speed=0
 
 func _physics_process(delta: float) -> void:
+	if is_dragging:
+		idle_timer = 0
+		var mouse_pos = Vector2(DisplayServer.mouse_get_position())
+		var new_win_pos = mouse_pos - drag_offset
+		DisplayServer.window_set_position(Vector2i(new_win_pos))
+		return
 	if is_idling:
 		idle_timer -= delta
 		if idle_timer <= 0:

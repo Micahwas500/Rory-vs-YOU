@@ -195,19 +195,52 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6f2rh"]
 size = Vector2(67, 66)
 
+[sub_resource type="Gradient" id="Gradient_27d83"]
+offsets = PackedFloat32Array(0, 0.006024096, 0.012048192)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_5d6qj"]
+gradient = SubResource("Gradient_27d83")
+
 [node name="Node2D" type="Node2D" unique_id=1980426756]
 script = ExtResource("1_k4ftq")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1917254324]
-position = Vector2(105, 79)
+position = Vector2(106, 142)
 scale = Vector2(1.585, 1.585)
 sprite_frames = SubResource("SpriteFrames_ij3h6")
 animation = &"zzzz"
 frame_progress = 0.053089567
 
+[node name="PopupMenu" type="PopupMenu" parent="AnimatedSprite2D" unique_id=1396716044]
+msaa_2d = 1
+oversampling_override = 1.0
+size = Vector2i(127, 50)
+theme_override_font_sizes/font_size = 10
+item_count = 1
+item_0/text = "Need help?"
+item_0/id = 0
+
 [node name="Area2D" type="Area2D" parent="." unique_id=1093697193]
+position = Vector2(1, 63)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=158910253]
 position = Vector2(104.5, 79)
 scale = Vector2(1.585, 1.585)
 shape = SubResource("RectangleShape2D_6f2rh")
+
+[node name="Label" type="Label" parent="." unique_id=597499611]
+visible = false
+offset_top = 4.0
+offset_right = 746.0
+offset_bottom = 105.0
+text = "They get more upset the 
+more you do not interact 
+with them. They will be
+VERY mad if you don't!"
+
+[node name="Sprite2D" type="Sprite2D" parent="Label" unique_id=1085631735]
+z_index = -1
+position = Vector2(97, 54)
+scale = Vector2(0.7905953, -123.08284)
+texture = SubResource("GradientTexture1D_5d6qj")
