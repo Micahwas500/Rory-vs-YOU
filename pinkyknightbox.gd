@@ -12,6 +12,11 @@ var drag_offset = Vector2()
 var sleepy_time = 20.0
 # oh yeah this is the first time i started annotating im so smert :)
 var rand_wander = 5
+# moved here and hope it works
+var window_position = Vector2(DisplayServer.window_get_position())
+# x and y speed tracking
+var win_pos1framebackx: float = 0.0 
+var win_pos1framebacky: float = 0.0 
 
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var area = $Area2D
@@ -53,12 +58,12 @@ func _on_menu_pressed(id):
 func maybe_idle():
 	if randf() < 0.05 or sleepy_time <= 0:
 		is_idling=true
-		idle_timer = randf_range(20.0, 60.0)
+		idle_timer = randf_range(10.0, 20.0)
 		var r = 0
 		if r == 0:
 			animated_sprite.play("zzzz")
 			speed=0
-			sleepy_time = randf_range(15, 30) 
+			sleepy_time = randf_range(15, 30) + idle_timer
 			print("this is what the sleep time is ", sleepy_time)
 
 func _physics_process(delta: float) -> void:
@@ -75,7 +80,10 @@ func _physics_process(delta: float) -> void:
 			speed = randf_range(300, 350)
 			animated_sprite.play("walk right")
 		return
-	var window_position = Vector2(DisplayServer.window_get_position())
+	@warning_ignore("unused_variable", "shadowed_variable")
+	var win_pos1framebackx = window_position.x
+	@warning_ignore("unused_variable", "shadowed_variable")
+	var win_pos1framebacky = window_position.y
 	window_position += direction*speed*delta
 	print(window_position)
 	window_position.x = clamp(window_position.x, 0, screen_size.x - window_size.x)
@@ -90,6 +98,9 @@ func _physics_process(delta: float) -> void:
 	print("awawke sleepy timer ", sleepy_time)
 	if rand_wander <= 0:
 		_alrthisisfunmovementtime()
+	if sleepy_time <= 0:
+		maybe_idle()
+		print("auto sleep!")
 	if window_position.x <= 0 or window_position.x >= screen_size.x - window_size.x:
 		direction.x *= -1
 		direction.y = randf_range(-2, 2)
@@ -102,14 +113,19 @@ func _physics_process(delta: float) -> void:
 
 # rand_wander is a random wandering thing if they spend too long existing
 func _alrthisisfunmovementtime():
-	if rand_wander == 0:
-		direction.x *= randf_range(-1, 1)
-		direction.y *= randf_range(-1, 1)
+	if rand_wander <= 0:
+		direction.x *= randf_range(-2, 2)
+		direction.y *= randf_range(-2, 2)
 		rand_wander = randf_range(3, 10)
 		print("new x is ", position.x, "and y is ", position.y)
 
 func _justmakesureitdoesntexplode():
-	if direction.x == 0: 
+	if abs(direction.x-.001) <= 0: 
 		direction.x = randf_range(-1, 1)
-	if direction.y == 0:
+	if abs(direction.y-.001) <= 0:
 		direction.y = randf_range(-1, 1)
+	if abs(window_position.x - win_pos1framebackx) <= 5 and abs(window_position.y - win_pos1framebacky) <= 5:
+		print("TOO SLOW!!!")
+		speed = randi_range(350, 400)
+		direction.y = randf_range(-1, 1)
+		direction.x = randf_range(-1, 1)
