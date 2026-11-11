@@ -17,6 +17,14 @@ var window_position = Vector2(DisplayServer.window_get_position())
 # x and y speed tracking
 var win_pos1framebackx: float = 0.0 
 var win_pos1framebacky: float = 0.0 
+# reset for x and y
+var noreset = true
+# timer for such
+var noresettimer = 2
+# timer for changing speed
+var counter = 0
+# stop redoing stuff
+var stopredoing = false
 
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var area = $Area2D
@@ -65,6 +73,7 @@ func maybe_idle():
 			speed=0
 			sleepy_time = randf_range(15, 30) + idle_timer
 			print("this is what the sleep time is ", sleepy_time)
+# speed test
 
 func _physics_process(delta: float) -> void:
 	if is_dragging:
@@ -72,6 +81,8 @@ func _physics_process(delta: float) -> void:
 		var mouse_pos = Vector2(DisplayServer.mouse_get_position())
 		var new_win_pos = mouse_pos - drag_offset
 		DisplayServer.window_set_position(Vector2i(new_win_pos))
+		window_position = new_win_pos
+		randomize()
 		return
 	if is_idling:
 		idle_timer -= delta
@@ -80,43 +91,55 @@ func _physics_process(delta: float) -> void:
 			speed = randf_range(300, 350)
 			animated_sprite.play("walk right")
 		return
-	@warning_ignore("unused_variable", "shadowed_variable")
-	var win_pos1framebackx = window_position.x
-	@warning_ignore("unused_variable", "shadowed_variable")
-	var win_pos1framebacky = window_position.y
+	win_pos1framebackx = window_position.x
+	win_pos1framebacky = window_position.y
 	window_position += direction*speed*delta
 	print(window_position)
 	window_position.x = clamp(window_position.x, 0, screen_size.x - window_size.x)
 	window_position.y = clamp(window_position.y, 0, screen_size.y - window_size.y)
 	DisplayServer.window_set_position(Vector2i(window_position))
+	noresettimer -= delta
+	counter = counter + 1
 	if sleepy_time >= 0:
 		sleepy_time -= delta
 		print("subtracted sleepy time = ", sleepy_time)
 	if rand_wander >= 0:
 		rand_wander -= delta
-		print("wandering ", rand_wander)
+		print("wandering time = ", rand_wander)
 	print("awawke sleepy timer ", sleepy_time)
 	if rand_wander <= 0:
 		_alrthisisfunmovementtime()
 	if sleepy_time <= 0:
 		maybe_idle()
 		print("auto sleep!")
+	if noreset == true:
+		_speedtest()
 	if window_position.x <= 0 or window_position.x >= screen_size.x - window_size.x:
 		direction.x *= -1
-		direction.y = randf_range(-2, 2)
+		direction.y = randf_range(-1, 1)
+		direction = direction.normalized()
 		print("x wall hit!")
 		animated_sprite.flip_h = !animated_sprite.flip_h
+		sleepy_time = sleepy_time - 1
 		maybe_idle()
 	if window_position.y <= 0 or window_position.y >= screen_size.y - window_size.y:
 		direction.y *= randf_range(-1, 1)
+		sleepy_time = sleepy_time - 1
+		direction = direction.normalized()
 		maybe_idle()
+	if noresettimer <= 0:
+		noreset = true
 
 # rand_wander is a random wandering thing if they spend too long existing
 func _alrthisisfunmovementtime():
-	if rand_wander <= 0:
+	if rand_wander <= 0 and stopredoing == false:
+		speed = 0
+		print("timer set!!!!")
+		stopredoing = true
+		await get_tree().create_timer(.5).timeout
 		direction.x *= randf_range(-2, 2)
 		direction.y *= randf_range(-2, 2)
-		rand_wander = randf_range(3, 10)
+		rand_wander = randf_range(3.5, 7)
 		print("new x is ", position.x, "and y is ", position.y)
 
 func _justmakesureitdoesntexplode():
@@ -124,8 +147,14 @@ func _justmakesureitdoesntexplode():
 		direction.x = randf_range(-1, 1)
 	if abs(direction.y-.001) <= 0:
 		direction.y = randf_range(-1, 1)
-	if abs(window_position.x - win_pos1framebackx) <= 5 and abs(window_position.y - win_pos1framebacky) <= 5:
+func _speedtest():
+	if abs(window_position.x - win_pos1framebackx) <= 25 and abs(window_position.y - win_pos1framebacky) <= 25 and is_idling == false:
 		print("TOO SLOW!!!")
 		speed = randi_range(350, 400)
 		direction.y = randf_range(-1, 1)
 		direction.x = randf_range(-1, 1)
+		noreset = false
+		noresettimer = 1
+	
+# good
+# seems to be working
