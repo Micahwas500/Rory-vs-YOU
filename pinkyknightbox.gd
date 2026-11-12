@@ -25,6 +25,10 @@ var noresettimer = 2
 var counter = 0
 # stop redoing stuff
 var stopredoing = false
+# velocity stuff
+var velocity = Vector2()
+# louse im so ferny
+var last_mouse = Vector2()
 
 @onready var animated_sprite = $AnimatedSprite2D
 @onready var area = $Area2D
@@ -78,11 +82,13 @@ func maybe_idle():
 func _physics_process(delta: float) -> void:
 	if is_dragging:
 		idle_timer = 0
+		var mouse = Vector2(DisplayServer.mouse_get_position())
+		velocity = (mouse - last_mouse) / delta
 		var mouse_pos = Vector2(DisplayServer.mouse_get_position())
 		var new_win_pos = mouse_pos - drag_offset
 		DisplayServer.window_set_position(Vector2i(new_win_pos))
 		window_position = new_win_pos
-		randomize()
+		velocity = velocity.lerp(Vector2.ZERO, 2 * delta)
 		return
 	if is_idling:
 		idle_timer -= delta
@@ -137,15 +143,15 @@ func _alrthisisfunmovementtime():
 		print("timer set!!!!")
 		stopredoing = true
 		await get_tree().create_timer(.5).timeout
-		direction.x *= randf_range(-2, 2)
-		direction.y *= randf_range(-2, 2)
+		direction.x *= randf_range(-1, 1)
+		direction.y *= randf_range(-1, 1)
 		rand_wander = randf_range(3.5, 7)
 		print("new x is ", position.x, "and y is ", position.y)
 
 func _justmakesureitdoesntexplode():
-	if abs(direction.x-.001) <= 0: 
+	if abs(direction.x-.01) <= 0: 
 		direction.x = randf_range(-1, 1)
-	if abs(direction.y-.001) <= 0:
+	if abs(direction.y-.01) <= 0:
 		direction.y = randf_range(-1, 1)
 func _speedtest():
 	if abs(window_position.x - win_pos1framebackx) <= 25 and abs(window_position.y - win_pos1framebacky) <= 25 and is_idling == false:
